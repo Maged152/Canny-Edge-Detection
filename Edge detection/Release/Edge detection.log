@@ -1,5 +1,6 @@
 ﻿  Source.cpp
 F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(138,54): warning C4244: '=': conversion from 'double' to 'Uint8', possible loss of data
+F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(226,72): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Generating code
   1 of 130 functions ( 0.8%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation

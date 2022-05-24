@@ -223,7 +223,7 @@ int main(int argc, char** args)
             Gx[y_img * image->w + x_img] = (int)fsumx;
             Gy[y_img * image->w + x_img] = (int)fsumy;
             G[y_img * image->w + x_img] = (int)fsum;
-            theta[y_img * image->w + x_img] = atanf(fsumy/fsumx);
+            theta[y_img * image->w + x_img] = atanf(fsumy/fsumx) * 180 / M_PI;
             // apply result
             result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, (int)fsum, (int)fsum, (int)fsum, (int)fsum);
 
@@ -232,11 +232,119 @@ int main(int argc, char** args)
     }
   
     // 4- non-maximum suppression
+    // discritize the angle to neareast 45 degree
+    for (int i = 0; i < image->h * image->w; i++)
+    {
+        if (theta[i] > -22.5 && theta[i] <= 22.5)
+            theta[i] = 0;
+        else if (theta[i] > 22.5 && theta[i] <= 67.5)
+            theta[i] = 45;
+        else if ((theta[i] > 67.5 && theta[i] <= 90) || (theta[i] > -90 && theta[i] <= -67.5))
+            theta[i] = 90;
+        else
+            theta[i] = 135;
+    }
+    //local max check
+    for (int x_img = 0; x_img < image->w; x_img++)
+    {
+        for (int y_img = 0; y_img < image->h; y_img++)
+        {
+            if (theta[y_img * image->w + x_img] == 0)
+            {
+                //check (x-1,y) and (x+1,y)
+                if (x_img + 1 < image->w)
+                {
+                    if (G[y_img * image->w + x_img] < G[y_img * image->w + x_img + 1])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                        continue;
+                    }
+                }
+                if (x_img -1 > -1)
+                {
+                    if (G[y_img * image->w + x_img] < G[y_img * image->w + x_img - 1])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                    }
+                }
 
+            }
+            else if (theta[y_img * image->w + x_img] == 45)
+            {
+                //check (x-1,y-1) and (x+1,y+1)
+                if (x_img + 1 < image->w && y_img+1 <image->h)
+                {
+                    if (G[y_img * image->w + x_img] < G[(y_img+1) * image->w + x_img + 1])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                        continue;
+                    }
+                }
+                if (x_img - 1 > -1 && y_img-1>-1)
+                {
+                    if (G[y_img * image->w + x_img] < G[(y_img - 1) * image->w + x_img - 1])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                    }
+                }
+            }
+            else if (theta[y_img * image->w + x_img] == 90)
+            {
+                //check (x,y-1) and (x,y+1)
+                if (y_img + 1 < image->h)
+                {
+                    if (G[y_img * image->w + x_img] < G[(y_img+1) * image->w + x_img ])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                        continue;
+                    }
+                }
+                if (y_img - 1 > -1)
+                {
+                    if (G[y_img * image->w + x_img] < G[(y_img - 1) * image->w + x_img])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                    }
+                }
+            }
+            else
+            {
+                //135
+                //check (x-1,y+1) and (x+1,y-1)
+                if (x_img + 1 < image->w && y_img - 1 > -1)
+                {
+                    if (G[y_img * image->w + x_img] < G[(y_img - 1) * image->w + x_img + 1])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                        continue;
+                    }
+                }
+                if (x_img - 1 > -1 && y_img + 1 < image->h)
+                {
+                    if (G[y_img * image->w + x_img] < G[(y_img + 1) * image->w + x_img - 1])
+                    {
+                        G[y_img * image->w + x_img] = 0;
+                        result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                    }
+                }
+            }
+      
+
+        }
+
+    }
+    /**************end of algorithm***************/
     SDL_UnlockSurface(Screensurface_edge);
     //show result image
     update_window(window_edge, image_edge, Screensurface_edge, SCREEN_WIDTH, SCREEN_HEIGHT);
-    /*********************************/
+    
     while (!quit)
     {
         //Handle events on queue
