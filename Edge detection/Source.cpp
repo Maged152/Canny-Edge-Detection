@@ -1,14 +1,15 @@
 #include <iostream>
 #include<string>
+#include <algorithm>
 #include <SDL.h>
 #include<SDL_image.h>
 
 //Screen dimension constants
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
+const int SCREEN_WIDTH = 720;
+const int SCREEN_HEIGHT = 500;
 
 
-
+/**************sdl*************/
 bool init_window(SDL_Window*& window,SDL_Surface* &screenSurface,std::string name,int W,int H,int flag)
 {
     //Initialization flag
@@ -22,7 +23,7 @@ bool init_window(SDL_Window*& window,SDL_Surface* &screenSurface,std::string nam
     else
     {
         //Create window
-        window = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
+        window = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, W, H, SDL_WINDOW_ALLOW_HIGHDPI);
         if (window == NULL)
         {
             printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -42,7 +43,7 @@ bool load_image(SDL_Surface* &img, SDL_Surface*& screenSurface, const char *path
     //Loading success flag
     bool success = true;
     //initialize the image
-    if(!IMG_Init(IMG_INIT_JPG |IMG_INIT_PNG))
+    if(!IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG))
     {
         std::cout << "Could not initiate SDL_image: " << IMG_GetError() << std::endl;
         success = false;
@@ -85,6 +86,8 @@ void close(SDL_Window*& window, SDL_Surface* &screenSurfacee)
     SDL_Quit();
 }
 
+/**********************************/
+
 
 int main(int argc, char** args) 
 {
@@ -104,11 +107,13 @@ int main(int argc, char** args)
     if (!init_window(window_original, Screensurface_original, "Original Image", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_INIT_VIDEO))
     {
         std::cout << "failed to create window !!\n";
+        system("pause");
         return 1;
     }
     if (!init_window(window_edge, Screensurface_edge, "Edge Detection ", SCREEN_WIDTH, SCREEN_HEIGHT, SDL_INIT_VIDEO))
     {
         std::cout << "failed to create window !!\n";
+        system("pause");
         return 1;
     }
     //load image
@@ -117,7 +122,7 @@ int main(int argc, char** args)
     std::cin >> path;
     if (!load_image(image, Screensurface_original, path.c_str()))
     {
-        std::cout << "failed to open image !!\n";
+        system("pause");
         return 1;
     }
     image_edge = SDL_CreateRGBSurfaceWithFormat(0, image->w, image->h, 8, SDL_PIXELFORMAT_RGBA8888);
@@ -340,6 +345,78 @@ int main(int argc, char** args)
         }
 
     }
+    // 5- Hysteresis thresholding
+    //calculate the mean of gradient
+    float mean = 0.0f;
+    int no_of_pixels = 0;
+    for (int i = 0; i < image->w * image->h; i++)
+    {
+        if (G[i] > 20)
+        {
+            mean += G[i];
+            no_of_pixels++;
+        }
+        
+    }
+    mean /= no_of_pixels;
+    //low ->-25% of mean and high-> +25% of mean
+    int low_threshold =  std::clamp(int(mean - 0.25 * mean), 0, 255);
+    int high_threshold =  std::clamp((int)(mean + 0.25 * mean), 0, 255);
+    
+    for (int x_img = 0; x_img < image->w; x_img++)
+    {
+        for (int y_img = 0; y_img < image->h; y_img++)
+        {
+            if (G[y_img * image->w + x_img] > high_threshold)
+            {
+                //keep it
+                result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 255, 255, 255, 255);
+                G[y_img * image->w + x_img] = 255;
+            }
+            else if (G[y_img * image->w + x_img] < low_threshold)
+            {
+                // discard this edge
+                result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0,0,0,0);
+                G[y_img * image->w + x_img] = 0;
+            }
+            else
+            {
+                // chaeck 8-neighbours
+                bool is_edge = false;
+                for (int x_n = -1; x_n < 2; x_n++)
+                {
+                    for (int y_n = -1; y_n < 2; y_n++)
+                    {
+                        int xloc = x_img + x_n;
+                        int yloc = y_img + y_n;
+                        //out of boundry check
+                        if (xloc > -1 && xloc<image->w && yloc>-1 && yloc < image->h)
+                        {
+                            if (G[yloc * image->w + xloc] > high_threshold)
+                            {
+                                is_edge = true;
+                                break;
+                            }  
+                        }
+
+                    }
+                }
+                if (is_edge)
+                {
+                    result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 255, 255, 255, 255);
+                    G[y_img * image->w + x_img] = 255;
+                }
+                else
+                {
+                    result_pixels[y_img * image->w + x_img] = SDL_MapRGBA(image_edge->format, 0, 0, 0, 0);
+                    G[y_img * image->w + x_img] = 0;
+                }
+            } 
+       
+        }
+
+    }
+
     /**************end of algorithm***************/
     SDL_UnlockSurface(Screensurface_edge);
     //show result image
@@ -355,11 +432,6 @@ int main(int argc, char** args)
               //User requests quit
               case SDL_WINDOWEVENT_CLOSE:
                   quit = true;
-                  break;
-              case SDL_WINDOWEVENT_SIZE_CHANGED:
-                  //int mWidth = e.window.data1;
-                 // int mHeight = e.window.data2;
-                 // update_window(window_edge, Screensurface_edge, Screensurface_edge, mWidth, mHeight);
                   break;
 
             }
