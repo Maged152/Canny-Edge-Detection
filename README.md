@@ -7,7 +7,7 @@
         5-hysteresis thresholding
 
 
-### Here is some results
+### Here are some results
 ![](./chair-leg.png)
 ![](./out1.jpg)
 ![](./rick.jpg)
