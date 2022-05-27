@@ -1,14 +1,24 @@
 ﻿  Source.cpp
-F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(101,58): warning C4244: '=': conversion from 'double' to 'Uint8', possible loss of data
-F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(192,30): warning C4244: '=': conversion from 'const _Ty' to 'float', possible loss of data
+F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(102,58): warning C4244: '=': conversion from 'double' to 'Uint8', possible loss of data
+F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(196,30): warning C4244: '=': conversion from 'const _Ty' to 'float', possible loss of data
           with
           [
               _Ty=int
           ]
-F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(197,78): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(201,78): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Generating code
+  
+  --- Analyzing function: SDL_main
+  F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(505) : info C5002: loop not vectorized due to reason '502'
+  F:\study\Code\projects\projects c++\Edge detection\Edge detection\Source.cpp(502) : info C5002: loop not vectorized due to reason '500'
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xstring(171) : info C5002: loop not vectorized due to reason '1301'
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xstring(177) : info C5002: loop not vectorized due to reason '1301'
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xstring(171) : info C5002: loop not vectorized due to reason '1301'
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xstring(177) : info C5002: loop not vectorized due to reason '1301'
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xstring(171) : info C5002: loop not vectorized due to reason '1301'
+  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\include\xstring(177) : info C5002: loop not vectorized due to reason '1301'
   1 of 136 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    8 functions had inline decision re-evaluated but remain unchanged
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Edge detection.vcxproj -> F:\study\Code\projects\projects c++\Edge detection\Release\Edge detection.exe

@@ -1,5 +1,6 @@
 #include <iostream>
 #include<string>
+#include<iomanip>
 #include <algorithm>
 #include <SDL.h>
 #include<SDL_image.h>
@@ -10,7 +11,7 @@ const int SCREEN_HEIGHT = 500;
 
 
 /**************sdl*************/
-bool init_window(SDL_Window*& window,SDL_Surface* &screenSurface,std::string name,int W,int H,int flag)
+inline bool init_window(SDL_Window*& window,SDL_Surface* &screenSurface,std::string name,int W,int H,int flag)
 {
     //Initialization flag
     bool success = true;
@@ -38,7 +39,7 @@ bool init_window(SDL_Window*& window,SDL_Surface* &screenSurface,std::string nam
     return success;
 }
 
-bool load_image(SDL_Surface* &img, SDL_Surface*& screenSurface, const char *path)
+inline bool load_image(SDL_Surface* &img, SDL_Surface*& screenSurface, const char *path)
 {
     //Loading success flag
     bool success = true;
@@ -61,7 +62,7 @@ bool load_image(SDL_Surface* &img, SDL_Surface*& screenSurface, const char *path
 
 }
 
-void update_window(SDL_Window*& window, SDL_Surface*& source, SDL_Surface*& dist,int mw,int mh )
+inline void update_window(SDL_Window*& window, SDL_Surface*& source, SDL_Surface*& dist,int mw,int mh )
 {
     // Apply the image stretched
      SDL_Rect stretchRect;
@@ -73,7 +74,7 @@ void update_window(SDL_Window*& window, SDL_Surface*& source, SDL_Surface*& dist
     SDL_UpdateWindowSurface(window);
 }
 
-void close(SDL_Window*& window, SDL_Surface* &screenSurfacee)
+inline void close(SDL_Window*& window, SDL_Surface* &screenSurfacee)
 {
 
     //Deallocate surface
@@ -87,7 +88,7 @@ void close(SDL_Window*& window, SDL_Surface* &screenSurfacee)
 }
 
 /**********************************/
-void RGBA2Gray(SDL_Surface* source, SDL_Surface* dist)
+inline void RGBA2Gray(SDL_Surface* source, SDL_Surface* dist)
 {
     SDL_Color col(0, 0, 0, 0);
 
@@ -103,7 +104,7 @@ void RGBA2Gray(SDL_Surface* source, SDL_Surface* dist)
     }
 }
 
-void apply_Gauss_kernel_gray(SDL_Surface* source, SDL_Surface* dist, int*kernel,int size)
+inline void apply_Gauss_kernel_gray(SDL_Surface* source, SDL_Surface* dist, int*kernel,int size)
 {
     SDL_Color col(0, 0, 0, 0);
     Uint32* image_pixels = (Uint32*)source->pixels;
@@ -111,9 +112,11 @@ void apply_Gauss_kernel_gray(SDL_Surface* source, SDL_Surface* dist, int*kernel,
     int L = -1 * (size >> 1);
     int H = (size >> 1) + 1;
     int ration = 0;
+
+    
     for (int i = 0; i < size*size; i++)
         ration += kernel[i];
-
+    
     for (int x_img = 0; x_img < source->w; x_img++)
     {
         for (int y_img = 0; y_img < source->h; y_img++)
@@ -165,6 +168,7 @@ void canny(SDL_Surface* source, SDL_Surface* dist, int* Gauss_kernel, int Gauss_
     int L = -1 * (S_size >> 1);
     int H = (S_size >> 1) + 1;
     Uint32* temp_pixels = (Uint32*)dist->pixels;
+    
     for (int x_img = 0; x_img < source->w; x_img++)
     {
         for (int y_img = 0; y_img < source->h; y_img++)
@@ -203,6 +207,7 @@ void canny(SDL_Surface* source, SDL_Surface* dist, int* Gauss_kernel, int Gauss_
     }
     // 4- non-maximum suppression
     // discritize the angle to neareast 45 degree
+   
     for (int i = 0; i < source->h * source->w; i++)
     {
         if (theta[i] > -22.5 && theta[i] <= 22.5)
@@ -314,15 +319,14 @@ void canny(SDL_Surface* source, SDL_Surface* dist, int* Gauss_kernel, int Gauss_
     //calculate the mean of gradient
     float mean = 0.0f;
     int no_of_pixels = 0;
+    #pragma omp simd reduction(+:mean,no_of_pixels)
     for (int i = 0; i < source->w * source->h; i++)
     {
         if (G[i] > 17)
         {
             mean += G[i];
             no_of_pixels++;
-
         }
-
     }
     mean /= no_of_pixels;
     // adaptive threshold depending on the mean
@@ -487,13 +491,14 @@ int main(int argc, char** args)
         1, 2, 1
     };
 
+
     canny(image, image_edge, kernel_blur, 3, kernel_Gx, kernel_Gy, 3);
+    IMG_SaveJPG(image_edge, "out4.jpg",4000);
 
     /**************end of algorithm***************/
     SDL_UnlockSurface(Screensurface_edge);
     //show result image
     update_window(window_edge, image_edge, Screensurface_edge, SCREEN_WIDTH, SCREEN_HEIGHT);
-    
     while (!quit)
     {
         //Handle events on queue
